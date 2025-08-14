@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Kasir & Stok - Ayam Penyet Surabaya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; } /* Diubah ke slate-100 */
+        .tab-active { border-bottom-color: #f59e0b; color: #f59e0b; font-weight: 600; }
+        .order-tab-active { border-bottom-color: #f59e0b; color: #f59e0b; font-weight: 600; }
+        .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; }
+        .status-baru { background-color: #3b82f6; color: white; }
+        .status-menyiapkan { background-color: #f97316; color: white; }
+        .status-siap { background-color: #22c55e; color: white; }
+        .status-selesai { background-color: #6b7280; color: white; }
+        .status-dibatalkan { background-color: #ef4444; color: white; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #22c55e; }
+        
+        /* Tambahan untuk efek modern */
+        .card-hover-effect {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .card-hover-effect:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); /* shadow-lg */
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            #receipt-modal, #receipt-modal * { visibility: visible; }
+            #receipt-modal { position: absolute; left: 0; top: 0; width: 100%; max-width: 320px; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body class="bg-slate-100">
+    <div class="container mx-auto p-4 md:p-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h1 class="text-3xl font-bold text-slate-800">Admin Dashboard</h1>
+            <div class="flex items-center gap-3 mt-3 sm:mt-0">
+                <div class="flex items-center gap-2 text-green-600 font-semibold"><i class="fas fa-circle text-sm"></i><span>Online</span></div>
+                <span class="text-slate-400" id="current-time"></span>
+            </div>
+        </div>
+        <div class="border-b border-slate-200 mb-6">
+            <nav class="flex -mb-px space-x-6">
+                <button data-tab="pesanan" class="tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-amber-600 transition-colors tab-active">Pesanan</button>
+                <button data-tab="stok" class="tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-amber-600 transition-colors">Manajemen Stok</button>
+            </nav>
+        </div>
+        <div id="tab-content">
+            <div id="pesanan-content">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-5 card-hover-effect">
+                        <div class="bg-blue-100 text-blue-500 p-4 rounded-full"><i class="fas fa-dollar-sign fa-2x"></i></div>
+                        <div><h2 class="text-slate-500 text-sm font-medium">Penjualan Hari Ini</h2><p id="daily-sales" class="text-3xl font-bold text-slate-800">Rp 0</p></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-5 card-hover-effect">
+                        <div class="bg-green-100 text-green-500 p-4 rounded-full"><i class="fas fa-check-circle fa-2x"></i></div>
+                        <div><h2 class="text-slate-500 text-sm font-medium">Pesanan Selesai</h2><p id="completed-orders" class="text-3xl font-bold text-slate-800">0</p></div>
+                    </div>
+                    <div class="bg-white p-5 rounded-xl shadow-md flex items-center gap-5 card-hover-effect">
+                        <div class="bg-red-100 text-red-500 p-4 rounded-full"><i class="fas fa-times-circle fa-2x"></i></div>
+                        <div><h2 class="text-slate-500 text-sm font-medium">Pesanan Dibatalkan</h2><p id="cancelled-orders" class="text-3xl font-bold text-slate-800">0</p></div>
+                    </div>
+                </div>
+                <div class="border-b border-slate-200 mb-6">
+                    <nav class="flex -mb-px space-x-6">
+                        <button data-status="Baru" class="order-tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-amber-600 transition-colors order-tab-active">Baru <span id="count-baru" class="ml-1 bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span></button>
+                        <button data-status="Menyiapkan" class="order-tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-amber-600 transition-colors">Menyiapkan <span id="count-menyiapkan" class="ml-1 bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span></button>
+                        <button data-status="Siap" class="order-tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-amber-600 transition-colors">Siap <span id="count-siap" class="ml-1 bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">0</span></button>
+                        <button data-status="Riwayat" class="order-tab-btn py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-amber-600 transition-colors">Riwayat</button>
+                    </nav>
+                </div>
+                <div id="orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"><p id="no-orders-msg" class="text-slate-500 col-span-full text-center py-10">Belum ada pesanan baru.</p></div>
+            </div>
+            <div id="stok-content" class="hidden">
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-4">
+                        <h2 class="text-xl font-bold text-slate-800">Daftar Menu & Stok</h2>
+                        <button id="upload-menu-btn" class="mt-3 sm:mt-0 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm font-medium">Upload/Update Menu Awal</button>
+                    </div>
+                    <p class="text-sm text-slate-500 mb-4">Gunakan tombol ini jika Anda pertama kali menggunakan fitur stok atau jika ada perubahan besar pada menu. Ini akan mengunggah semua menu dari file ke database.</p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-slate-500">
+                            <thead class="text-xs text-slate-700 uppercase bg-slate-100"><tr><th scope="col" class="px-6 py-3">Nama Menu</th><th scope="col" class="px-6 py-3">Kategori</th><th scope="col" class="px-6 py-3 text-right">Status</th></tr></thead>
+                            <tbody id="stock-table-body"></tbody>
+                        </table>
+                        <p id="no-menu-msg" class="text-slate-500 text-center py-10 hidden">Menu belum diunggah. Klik tombol "Upload Menu Awal".</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="receipt-modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden">
+        <div id="receipt-modal" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm"><div id="receipt-content" class="text-sm text-slate-800"></div><div class="mt-6 flex justify-end gap-3 no-print"><button id="close-receipt-btn" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">Tutup</button><button id="print-receipt-btn" class="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 flex items-center gap-2"><i class="fas fa-print"></i> Cetak Struk</button></div></div>
+    </div>
+    <audio id="notification-sound" src="https://actions.google.com/sounds/v1/alarms/notification_high_intensity.ogg" preload="auto"></audio>
+    
+    <script type="module">
+        const firebaseConfig = {
+    apiKey: "AIzaSyA1Rbp6QZVBYNGnFcAGFnexj8ajQxIC2Kg",
+    authDomain: "menu-online-aps.firebaseapp.com",
+    projectId: "menu-online-aps",
+    storageBucket: "menu-online-aps.firebasestorage.app",
+    messagingSenderId: "153926646130",
+    appId: "1:153926646130:web:68d76914acee65dca4c5eb",
+    measurementId: "G-SSJ1PQVP44"
+};
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        let allOrders = [], allMenuItems = [], currentOrderFilter = 'Baru';
+        
+        const ordersContainer = document.getElementById('orders-container'), noOrdersMsg = document.getElementById('no-orders-msg'), notificationSound = document.getElementById('notification-sound'), stockTableBody = document.getElementById('stock-table-body'), noMenuMsg = document.getElementById('no-menu-msg');
+        
+        function formatRupiah(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0); }
+        function formatWaktu(ts) { return ts ? ts.toDate().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'N/A'; }
+        function updateClock() { document.getElementById('current-time').textContent = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }); }
+        
+        const tabs = document.querySelectorAll('.tab-btn'), tabContents = { pesanan: document.getElementById('pesanan-content'), stok: document.getElementById('stok-content') };
+        tabs.forEach(tab => tab.addEventListener('click', () => {
+            document.querySelector('.tab-active').classList.remove('tab-active');
+            tab.classList.add('tab-active');
+            Object.values(tabContents).forEach(content => content.classList.add('hidden'));
+            tabContents[tab.dataset.tab].classList.remove('hidden');
+        }));
+        
+        function renderOrders() {
+            const filtered = currentOrderFilter === 'Riwayat' ? allOrders.filter(o => ['Selesai', 'Dibatalkan'].includes(o.status)) : allOrders.filter(o => o.status === currentOrderFilter);
+            ordersContainer.innerHTML = '';
+            noOrdersMsg.style.display = filtered.length === 0 ? 'block' : 'none';
+            noOrdersMsg.textContent = `Belum ada pesanan dengan status "${currentOrderFilter}".`;
+            filtered.forEach(order => ordersContainer.appendChild(createOrderCard(order)));
+            updateCounts();
+            updateDashboard();
+        }
+
+        // FUNGSI createOrderCard YANG DIPERBARUI
+        function createOrderCard(order) {
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-xl shadow-lg flex flex-col card-hover-effect';
+            card.innerHTML = `
+                <div class="p-5 flex-grow">
+                    <div class="flex justify-between items-start mb-3">
+                        <h3 class="font-bold text-lg text-slate-800">#${order.id.substring(0,6).toUpperCase()}</h3>
+                        <span class="status-badge status-${order.status.toLowerCase()}">${order.status}</span>
+                    </div>
+                    <p class="font-semibold text-slate-700">${order.customerName}</p>
+                    <p class="text-sm text-slate-500 mb-3">${order.customerAddress}</p>
+                    <div class="border-t border-b border-dashed py-3 my-3 text-sm space-y-2">
+                        ${order.items.map(item => `
+                            <div class="flex justify-between">
+                                <span class="truncate pr-2">${item.name} <span class="text-slate-500">x${item.quantity}</span></span>
+                                <span class="font-medium whitespace-nowrap">${formatRupiah(item.price*item.quantity)}</span>
+                            </div>`).join('')}
+                    </div>
+                    <div class="flex justify-between items-center font-bold text-xl mt-3">
+                        <span>Total</span>
+                        <span>${formatRupiah(order.total)}</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-3">Masuk: ${formatWaktu(order.timestamp)}</p>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-b-xl mt-auto space-y-2">
+                    ${getActionButtons(order)}
+                    <button data-id="${order.id}" class="print-btn w-full text-center px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 text-sm font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-receipt"></i> Lihat Struk
+                    </button>
+                </div>`;
+            return card;
+        }
+
+        // FUNGSI getActionButtons YANG DIPERBARUI
+        function getActionButtons(order) {
+            if (order.status === 'Baru') return `
+                <button data-id="${order.id}" data-status="Menyiapkan" class="action-btn w-full px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-cogs"></i> Proses Pesanan
+                </button>
+                <button data-id="${order.id}" data-status="Dibatalkan" class="action-btn w-full px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 text-sm font-medium flex items-center justify-center gap-2">
+                    <i class="fas fa-ban"></i> Batalkan
+                </button>`;
+            if (order.status === 'Menyiapkan') return `
+                <button data-id="${order.id}" data-status="Siap" class="action-btn w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-check"></i> Pesanan Siap
+                </button>`;
+            if (order.status === 'Siap') return `
+                <button data-id="${order.id}" data-status="Selesai" class="action-btn w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-semibold flex items-center justify-center gap-2">
+                    <i class="fas fa-box-open"></i> Selesaikan Pesanan
+                </button>`;
+            return '';
+        }
+
+        function updateCounts() { const counts = {Baru:0,Menyiapkan:0,Siap:0}; allOrders.forEach(o => {if(counts.hasOwnProperty(o.status))counts[o.status]++}); Object.keys(counts).forEach(k=>document.getElementById(`count-${k.toLowerCase()}`).textContent=counts[k])}
+        function updateDashboard() { const today = new Date().toISOString().slice(0,10); let sales=0,completed=0,cancelled=0; allOrders.forEach(o=>{if(o.timestamp?.toDate().toISOString().slice(0,10)===today){if(o.status==='Selesai'){sales+=o.total;completed++}else if(o.status==='Dibatalkan')cancelled++}}); document.getElementById('daily-sales').textContent=formatRupiah(sales);document.getElementById('completed-orders').textContent=completed;document.getElementById('cancelled-orders').textContent=cancelled;}
+        
+        function renderStockTable() {
+            stockTableBody.innerHTML = '';
+            noMenuMsg.style.display = allMenuItems.length === 0 ? 'block' : 'none';
+            allMenuItems.sort((a,b)=>a.name.localeCompare(b.name)).forEach(item => {
+                const row = document.createElement('tr');
+                row.className = 'bg-white border-b hover:bg-slate-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-slate-900">${item.name}</td>
+                    <td class="px-6 py-4">${item.category}</td>
+                    <td class="px-6 py-4 text-right">
+                        <label for="toggle-${item.id}" class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggle-${item.id}" class="sr-only peer" ${item.isAvailable?'checked':''} data-id="${item.id}">
+                            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-focus:ring-2 peer-focus:ring-amber-300 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            <span class="ml-3 text-sm font-medium text-slate-900">${item.isAvailable?'Tersedia':'Habis'}</span>
+                        </label>
+                    </td>`;
+                stockTableBody.appendChild(row);
+            });
+        }
+
+        document.querySelectorAll('.order-tab-btn').forEach(btn => btn.addEventListener('click', () => {
+            document.querySelector('.order-tab-active').classList.remove('order-tab-active');
+            btn.classList.add('order-tab-active');
+            currentOrderFilter = btn.dataset.status;
+            renderOrders();
+        }));
+        ordersContainer.addEventListener('click', async e => {
+            const target = e.target.closest('button');
+            if(!target)return;
+            const orderId = target.dataset.id;
+            if(target.classList.contains('action-btn')) await updateDoc(doc(db,"orders",orderId),{status:target.dataset.status});
+            else if(target.classList.contains('print-btn')){const order=allOrders.find(o=>o.id===orderId);if(order)renderReceipt(order);}
+        });
+        stockTableBody.addEventListener('change', async e => {
+            if(e.target.type==='checkbox'){
+                const itemId=e.target.dataset.id, isAvailable=e.target.checked;
+                try { await updateDoc(doc(db,"menu",itemId),{isAvailable:isAvailable}); }
+                catch(err){console.error("Gagal update stok:",err); alert("Gagal memperbarui stok. Periksa koneksi internet atau konsol untuk error."); e.target.checked=!isAvailable;}
+            }
+        });
+        document.getElementById('upload-menu-btn').addEventListener('click', async () => {
+            if(!confirm("Yakin ingin unggah ulang semua menu? Ini akan menimpa status stok yang ada.")) return;
+            const initialMenuData = [
+                // ... (Data menu Anda tetap di sini, tidak perlu diubah) ...
+                { id: 'paket-ayam-paha', name: 'Paket Ayam Penyet (Paha)', price: 34000, category: 'Paket', group: 'Paket Ayam Penyet', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/IMG_20250725_123654.png', desc: 'Nasi dengan ayam penyet paha, sambal khas, dan lalapan segar.' },
+                { id: 'paket-ayam-dada', name: 'Paket Ayam Penyet (Dada)', price: 34000, category: 'Paket', group: 'Paket Ayam Penyet', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/IMG_20250725_123654.png', desc: 'Nasi dengan ayam penyet dada, sambal khas, dan lalapan segar.' },
+                { id: 'paket-bebek-paha', name: 'Paket Bebek Penyet (Paha)', price: 40000, category: 'Paket', group: 'Paket Bebek Penyet', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_143339816.jpg', desc: 'Nasi dengan bebek penyet paha, sambal khas, dan lalapan segar.' },
+                { id: 'paket-bebek-dada', name: 'Paket Bebek Penyet (Dada)', price: 40000, category: 'Paket', group: 'Paket Bebek Penyet', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_143339816.jpg', desc: 'Nasi dengan bebek penyet dada, sambal khas, dan lalapan segar.' },
+                { id: 'paket-lele', name: 'Paket Lele', price: 29000, category: 'Paket', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_142302094.png', desc: 'Nasi dengan lele goreng renyah, sambal, dan lalapan.' },
+                { id: 'paket-gurame', name: 'Paket Gurame', price: 39000, category: 'Paket', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_144405503.jpg', desc: 'Nasi dengan gurame goreng, sambal, dan lalapan.' },
+                { id: 'mie-goreng-ayam', name: 'Mie Goreng (Ayam)', price: 31000, category: 'Mie Jogja', group: 'Mie Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_145121567.jpg', desc: 'Mie goreng lezat dengan suwiran ayam dan sayuran.' },
+                { id: 'mie-goreng-sapi', name: 'Mie Goreng (Sapi)', price: 36000, category: 'Mie Jogja', group: 'Mie Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_145121567.jpg', desc: 'Mie goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'migor-ATB', name: 'Mie Goreng (Ayam+Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Mie Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_145121567.jpg', desc: 'Mie goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'migor-DSTB', name: 'Mie Goreng (Sapi+Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Mie Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_145121567.jpg', desc: 'Mie goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'mie-godhog-ayam', name: 'Mie Godhog (Ayam)', price: 31000, category: 'Mie Jogja', group: 'Mie Godhog Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/IMG-20250425-WA0021.jpg', desc: 'Mie Kuah lezat dengan suwiran ayam dan sayuran.' },
+                { id: 'mie-godhog-sapi', name: 'Mie Godhog (Sapi)', price: 36000, category: 'Mie Jogja', group: 'Mie Godhog Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/IMG-20250425-WA0021.jpg', desc: 'Mie Kuah lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'midog-ATB', name: 'Mie Godhog (Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Mie Godhog Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/IMG-20250425-WA0021.jpg', desc: 'Mie kuah lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'midog-DSTB', name: 'Mie Godhog (Sapi+Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Mie Godhog Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/IMG-20250425-WA0021.jpg', desc: 'Mie kuah lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'Bihun-goreng-ayam', name: 'Bihun Goreng (Ayam)', price: 31000, category: 'Mie Jogja', group: 'Bihun Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/426a3902c0d1d5c221f393c845bacccf72a8ed7c/SAVE_20250725_140944.jpg', desc: 'Bihun goreng lezat dengan suwiran ayam dan sayuran.' },
+                { id: 'bihun-goreng-sapi', name: 'Bihun Goreng (Sapi)', price: 36000, category: 'Mie Jogja', group: 'Bihun Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/426a3902c0d1d5c221f393c845bacccf72a8ed7c/SAVE_20250725_140944.jpg', desc: 'Bihun goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'bigor-ATB', name: 'Bihun Goreng (Ayam+Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Bihun Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/426a3902c0d1d5c221f393c845bacccf72a8ed7c/SAVE_20250725_140944.jpg', desc: 'Bihun goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'bigor-DSTB', name: 'Bihun Goreng (Sapi+Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Bihun Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/426a3902c0d1d5c221f393c845bacccf72a8ed7c/SAVE_20250725_140944.jpg', desc: ' Bihun goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'bihun-godhog-ayam', name: 'Bihun Godhog (Ayam)', price: 31000, category: 'Mie Jogja', group: 'Bihun Godhog Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/IMG-20250503-WA0051.jpg', desc: 'Bihun Kuah lezat dengan suwiran ayam dan sayuran.' },
+                { id: 'bidog-sapi', name: 'Bihun Godhog (Sapi)', price: 36000, category: 'Mie Jogja', group: 'Bihun Godhog Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/IMG-20250503-WA0051.jpg', desc: 'Bihun Kuah lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'Bidog-ATB', name: 'Bihun Godhog (Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Bihun Godhog Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/IMG-20250503-WA0051.jpg', desc: 'Bihun kuah lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'bidog-DSTB', name: 'Bihun Godhog (Sapi+Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Bihun Godhog Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/IMG-20250503-WA0051.jpg', desc: 'Bihun kuah lezat dengan irisan daging sapi dan sayuran.' },
+                 { id: 'nasgor-ayam', name: 'Nasi Goreng (Ayam)', price: 31000, category: 'Mie Jogja', group: 'Nasi Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/IMG-20250425-WA0119.jpg', desc: 'Nasi Goreng lezat dengan suwiran ayam dan sayuran.' },
+                { id: 'nasgor-sapi', name: 'Nasi Goreng (Sapi)', price: 36000, category: 'Mie Jogja', group: 'Nasi Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/IMG-20250425-WA0119.jpg', desc: 'Nasi Goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'Nasgor-ATB', name: 'Nasgor (Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Nasi Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/IMG-20250425-WA0119.jpg', desc: 'Nasi Goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'Nasgor-DSTB', name: 'Nasi Goreng (Sapi+Telur Bebek)', price: 37000, category: 'Mie Jogja', group: 'Nasi Goreng Spesial', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/IMG-20250425-WA0119.jpg', desc: 'Nasi Goreng lezat dengan irisan daging sapi dan sayuran.' },
+                { id: 'ayam-goreng-paha', name: 'Ayam Goreng(Paha)', price: 27000, category: 'Satuan', group: 'Ayam Goreng (satuan)', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/BackgroundEraser_20250425_144304379.jpg', desc: 'Ayam goreng, cocok untuk lauk.' },
+                { id: 'ayam-goreng-Dada', name: 'Ayam Goreng (Dada)', price: 27000, category: 'Satuan', group: 'Ayam Goreng (satuan)', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/BackgroundEraser_20250425_144304379.jpg', desc: 'Ayam goreng, cocok untuk lauk.' },
+                { id: 'Bebek-goreng-paha', name: 'Bebek Goreng(Paha)', price: 31000, category: 'Satuan', group: 'Bebek Goreng (satuan)', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/BackgroundEraser_20250425_143823582.jpg', desc: 'Bebek goreng, cocok untuk lauk.' },
+                { id: 'Bebek-goreng-Dada', name: 'Bebel Goreng (Dada)', price: 31000, category: 'Satuan', group: 'Bebek Goreng (satuan)', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/BackgroundEraser_20250425_143823582.jpg', desc: 'Bebek goreng, cocok untuk lauk.' },
+                { id: 'lele-goreng', name: 'Lele Goreng (Satuan)', price: 20000, category: 'Satuan', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/BackgroundEraser_20250425_143950967.jpg', desc: 'Lele goreng renyah satuan.' },
+                { id: 'Gurame-goreng', name: 'Gurame Goreng (Satuan)', price: 20000, category: 'Satuan', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/Soetta/BackgroundEraser_20250425_144116230.jpg', desc: 'Gurame goreng renyah.' },
+                { id: 'Balado-terong', name: 'Balado Terong', price: 14000, category: 'Lauk & Sayur', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_155315105.jpg', desc: 'Balado Terong Lezat, cocok untuk lauk.' },
+                { id: 'Tumis-Kangkung', name: 'Tumis Kangkung', price: 16000, category: 'Lauk & Sayur', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_151326528.jpg', desc: 'Tumisan Lezat, cocok untuk lauk.' },
+                { id: 'Cah-brokoli', name: 'Cah Brokoli', price: 18000, category: 'Lauk & Sayur', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG_20250726_112257.jpg', desc: 'Tumisan Lezat, cocok untuk lauk.' },
+                { id: 'tahu-goreng', name: 'Tahu Goreng', price: 13000, category: 'Gorengan', group:'Tahu', image : 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/Untitled%20design_20250726_143949_0000.png', desc: 'Gorengan Lezat, cocok untuk lauk.' }, 
+                { id: 'tahu-penyet', name: 'Tahu Penyet', price: 16000, category: 'Gorengan', group:'Tahu', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/Untitled%20design_20250726_143949_0000.png', desc: 'Gorengan Lezat, cocok untuk lauk.' },
+                { id: 'tempe-penyet', name: 'Tempe Penyet', price: 16000, category: 'Gorengan', group:'Tempe', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG-20250425-WA0114.jpg', desc: 'Gorengan Lezat, cocok untuk lauk.' },
+                { id: 'tempe-goreng', name: 'Tempe Goreng', price: 13000, category: 'Gorengan', group:'Tempe', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG-20250425-WA0114.jpg', desc: 'Gorengan Lezat, cocok untuk lauk.' },
+                { id: 'Mendoan', name: 'Tempe Mendoan(2pcs)', price: 7000, category: 'Gorengan', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_151034809.jpg', desc: 'Gorengan Lezat, cocok untuk lauk.' },
+                { id: 'Kol-goreng', name: 'Kol Goreng', price: 7000, category: 'Gorengan', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG_20250726_150035.png', desc: 'Sayur Goreng Lezat, cocok untuk lauk.' }, 
+                { id: 'udang-goreng-tepung', name: 'Udang Goreng Tepung', price: 36000, category: 'Lauk & Sayur', group: 'Udang', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG_20250726_202954.jpg', desc: 'Udang Goreng Yang renyah, cocok untuk lauk' },
+                { id: 'Udang-balado', name: 'Udang Balado', price: 36000, category: 'Lauk & Sayur', group: 'Udang', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG_20250726_202954.jpg', desc: 'Udang Balado dengan bumbu khas yang nikmat.' },
+                { id: 'cumi-goreng-tepung', name: 'Cumi Goreng Tepung', price: 36000, category: 'Lauk & Sayur', group: 'Cumi', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG_20250726_202918.jpg', desc: 'Cumi Goreng Yang renyah, cocok untuk lauk' }, 
+                { id: 'Cumi-balado', name: 'Cumi Balado', price: 36000, category: 'Lauk & Sayur', group: 'Cumi', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG_20250726_202918.jpg', desc: 'Cumi Balado dengan bumbu khas yang nikmat.' },
+                { id: 'Capcay-biasa', name: 'Capcay Biasa', price: 18000, category: 'Lauk & Sayur', group: 'Capcay', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_144826912.jpg', desc: 'Capcay nikmat dengan paduan banyak sayuran' },
+                { id: 'Capcay-Seafood', name: 'Capcay Seafood', price: 27000, category: 'Lauk & Sayur', group: 'Capcay', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_144826912.jpg', desc: 'Capcay nikmat dengan paduan banyak sayuran & Seafood' },
+                { id: 'es-teh', name: 'Es Teh Manis', price: 8000, category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_151508876.jpg', desc: 'Teh manis dingin yang menyegarkan.' },
+                { id: 'es-lemon-tea', name: 'Es Lemon Tea', price: 16000, category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_00000000787c61f5bdb36bb778b32ae0.png', desc: 'Lemon Tea dingin yang menyegarkan.' },
+                { id: 'es-jeruk', name: 'Es Jeruk', price: 16000, category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_153252955.jpg', desc: 'Es jeruk peras asli, kaya vitamin C.' },
+                { id: 'LBL', name: 'Lidah Buaya Lemon', price: 18000, category: 'Minuman', group:'Lidah Buaya', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG_20250726_232152.png', desc: 'Minuman khas Pontianak ' },
+                { id: 'LBC', name: 'Lidah Buaya Cocopandan', price: 18000, category: 'Minuman', group:'Lidah Buaya', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/IMG_20250726_232152.png', desc: 'Minuman khas Pontianak ' },
+                { id: 'jus-alpukat', name: 'Jus Alpukat', price: 19000, category: 'Minuman', group:'Jus Segar', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_00000000c6f86230bae5383bbd3a3b27.png', desc: 'Jus Segar dengan beberapa pilihan.' },
+                { id: 'jus-Melon', name: 'Jus Melon', price: 19000, group:'Jus Segar', category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_00000000c6f86230bae5383bbd3a3b27.png', desc: 'Jus Melon Segar yang nikmat.' },
+                { id: 'jus-Mangga', name: 'Jus Mangga', price: 19000, category: 'Minuman',group:'Jus Segar', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_00000000c6f86230bae5383bbd3a3b27.png', desc: 'Jus Mangga Segar yang nikmat.' },
+                { id: 'jus-Strawbery', name: 'Jus Strawberry', price: 19000, category: 'Minuman',group:'Jus Segar', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_00000000c6f86230bae5383bbd3a3b27.png', desc: 'Jus Mangga Segar yang nikmat.' },
+                { id: 'Red-velvet', name: 'Red Velvet', price: 20000,  category: 'Minuman', group:'Susu Rasa', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_00000000ef1061f7bdc7f72a64a74c06.png', desc: 'Minuman Susu Rasa Buah Bit.' },
+                { id: 'Taro', name: 'Taro', price: 20000, category: 'Minuman', group:'Susu Rasa', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_00000000ef1061f7bdc7f72a64a74c06.png', desc: 'Minuman Susu Rasa Taro.' },
+                { id: 'Matcha', name: 'Matcha', price: 20000, category: 'Minuman', group:'Susu Rasa', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_00000000ef1061f7bdc7f72a64a74c06.png', desc: 'Minuman Susu Rasa Matcha.' },
+                { id: 'es-campur', name: 'Es Campur', price: 21000, category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_161926242.jpg', desc: 'Es Campur Segar yang nikmat.' },
+                { id: 'teh-tarik', name: 'Teh Tarik', price: 16000, category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/file_0000000024c061f9824aa74d5bb70e95.png', desc: 'Perpaduan antara teh yang nikmat dan susu kental manis.' },
+                { id: 'soda-gembira', name: 'Soda Gembira', price: 21000, category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/BackgroundEraser_20250425_151221940.jpg', desc: 'Paduan Soda dengan Susu dan sirup cocopandan.' },
+                { id: 'brown-sugar', name: 'Brown Sugar', price: 16000, category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/35%20Ap%20260%20%401x_agung.pdf%20(20%20x%2031.503%20cm)_20250425_204612_0000.pdf_20250427__20250726_231523_0000.png', desc: 'Susu gula aren asli.' },
+                { id: 'air-mineral', name: 'Air Mineral', price: 7000, category: 'Minuman', image: 'https://raw.githubusercontent.com/AyamPenyetSurabayaSoetta/Lauk-minuman/refs/heads/main/35%20Ap%20260%20%401x_agung.pdf%20(20%20x%2031.503%20cm)_20250425_204612_0000.pdf_20250427__20250726_231933_0000.png', desc: 'Air mineral kemasan botol 600ml.' },
+            ];
+            if(initialMenuData.length===0){alert("Data menu kosong. Salin `initialMenuData` dari file menu pelanggan ke dalam script `admin.html`.");return;}
+            const batch = writeBatch(db);
+            initialMenuData.forEach(item => { const docRef = doc(db,"menu",item.id); batch.set(docRef, {...item, isAvailable:true}); });
+            try { await batch.commit(); alert("Menu berhasil diunggah!"); }
+            catch(err){console.error("Gagal unggah menu:",err);alert("Gagal mengunggah menu.");}
+        });
+        const receiptModalOverlay = document.getElementById('receipt-modal-overlay');
+        function renderReceipt(order){const content=document.getElementById('receipt-content'),now=new Date();content.innerHTML=`<div class="text-center mb-4"><h3 class="font-bold text-lg">Ayam Penyet Surabaya</h3><p class="text-xs">Jl. Soekarno Hatta, Bandung</p></div><div class="border-t border-b border-dashed py-2 my-2"><div class="flex justify-between"><span>No:</span><span>#${order.id.substring(0,6).toUpperCase()}</span></div><div class="flex justify-between"><span>Tanggal:</span><span>${now.toLocaleDateString('id-ID')}</span></div><div class="flex justify-between"><span>Jam:</span><span>${now.toLocaleTimeString('id-ID')}</span></div></div><div class="py-2">${order.items.map(item=>`<div class="mb-1"><p>${item.name}</p><div class="flex justify-between"><span>${item.quantity} x ${formatRupiah(item.price)}</span><span class="font-medium">${formatRupiah(item.price*item.quantity)}</span></div></div>`).join('')}</div><div class="border-t border-dashed pt-2 mt-2"><div class="flex justify-between font-bold"><span>TOTAL</span><span>${formatRupiah(order.total)}</span></div></div><div class="text-center mt-6 text-xs"><p>Terima kasih!</p></div>`;receiptModalOverlay.classList.remove('hidden')}
+        document.getElementById('close-receipt-btn').addEventListener('click',()=>receiptModalOverlay.classList.add('hidden'));
+        document.getElementById('print-receipt-btn').addEventListener('click',()=>window.print());
+        receiptModalOverlay.addEventListener('click',e=>{if(e.target===receiptModalOverlay)receiptModalOverlay.classList.add('hidden')});
+        onSnapshot(query(collection(db,"orders"),orderBy("timestamp","desc")),snapshot=>{let isNew=snapshot.docChanges().some(c=>c.type==="added"&&(!c.doc.data().timestamp||c.doc.data().timestamp.toDate()>new Date(Date.now()-5000)));allOrders=snapshot.docs.map(d=>({id:d.id,...d.data()}));renderOrders();if(isNew)notificationSound.play().catch(e=>console.error("Audio fail:",e))});
+        onSnapshot(collection(db,"menu"),snapshot=>{allMenuItems=snapshot.docs.map(d=>({id:d.id,...d.data()}));renderStockTable();});
+        updateClock(); setInterval(updateClock, 60000);
+    </script>
+</body>
+</html>
