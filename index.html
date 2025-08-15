@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; } /* Diubah ke slate-100 */
+        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
         .tab-active { border-bottom-color: #f59e0b; color: #f59e0b; font-weight: 600; }
         .order-tab-active { border-bottom-color: #f59e0b; color: #f59e0b; font-weight: 600; }
         .status-badge { padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; text-transform: uppercase; }
@@ -19,13 +19,12 @@
         .status-dibatalkan { background-color: #ef4444; color: white; }
         .toggle-checkbox:checked + .toggle-label { background-color: #22c55e; }
         
-        /* Tambahan untuk efek modern */
         .card-hover-effect {
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
         .card-hover-effect:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); /* shadow-lg */
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         }
 
         @media print {
@@ -98,18 +97,17 @@
     <div id="receipt-modal-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden">
         <div id="receipt-modal" class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm"><div id="receipt-content" class="text-sm text-slate-800"></div><div class="mt-6 flex justify-end gap-3 no-print"><button id="close-receipt-btn" class="px-4 py-2 bg-slate-200 text-slate-800 rounded-md hover:bg-slate-300">Tutup</button><button id="print-receipt-btn" class="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600 flex items-center gap-2"><i class="fas fa-print"></i> Cetak Struk</button></div></div>
     </div>
-    <audio id="notification-sound" src="https://actions.google.com/sounds/v1/alarms/notification_high_intensity.ogg" preload="auto"></audio>
     
     <script type="module">
         const firebaseConfig = {
-    apiKey: "AIzaSyA1Rbp6QZVBYNGnFcAGFnexj8ajQxIC2Kg",
-    authDomain: "menu-online-aps.firebaseapp.com",
-    projectId: "menu-online-aps",
-    storageBucket: "menu-online-aps.firebasestorage.app",
-    messagingSenderId: "153926646130",
-    appId: "1:153926646130:web:68d76914acee65dca4c5eb",
-    measurementId: "G-SSJ1PQVP44"
-};
+            apiKey: "AIzaSyA1Rbp6QZVBYNGnFcAGFnexj8ajQxIC2Kg",
+            authDomain: "menu-online-aps.firebaseapp.com",
+            projectId: "menu-online-aps",
+            storageBucket: "menu-online-aps.firebasestorage.app",
+            messagingSenderId: "153926646130",
+            appId: "1:153926646130:web:68d76914acee65dca4c5eb",
+            measurementId: "G-SSJ1PQVP44"
+        };
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getFirestore, collection, onSnapshot, doc, updateDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
@@ -118,7 +116,9 @@
         
         let allOrders = [], allMenuItems = [], currentOrderFilter = 'Baru';
         
-        const ordersContainer = document.getElementById('orders-container'), noOrdersMsg = document.getElementById('no-orders-msg'), notificationSound = document.getElementById('notification-sound'), stockTableBody = document.getElementById('stock-table-body'), noMenuMsg = document.getElementById('no-menu-msg');
+        const notificationSound = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjQ1LjEwMAAAAAAAAAAAAAAA//tAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD/8AAAB8TEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV-');
+        
+        const ordersContainer = document.getElementById('orders-container'), noOrdersMsg = document.getElementById('no-orders-msg'), stockTableBody = document.getElementById('stock-table-body'), noMenuMsg = document.getElementById('no-menu-msg');
         
         function formatRupiah(num) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num || 0); }
         function formatWaktu(ts) { return ts ? ts.toDate().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }) : 'N/A'; }
@@ -142,7 +142,6 @@
             updateDashboard();
         }
 
-        // FUNGSI createOrderCard YANG DIPERBARUI
         function createOrderCard(order) {
             const card = document.createElement('div');
             card.className = 'bg-white rounded-xl shadow-lg flex flex-col card-hover-effect';
@@ -176,7 +175,6 @@
             return card;
         }
 
-        // FUNGSI getActionButtons YANG DIPERBARUI
         function getActionButtons(order) {
             if (order.status === 'Baru') return `
                 <button data-id="${order.id}" data-status="Menyiapkan" class="action-btn w-full px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 font-semibold flex items-center justify-center gap-2">
@@ -202,7 +200,28 @@
         function renderStockTable() {
             stockTableBody.innerHTML = '';
             noMenuMsg.style.display = allMenuItems.length === 0 ? 'block' : 'none';
-            allMenuItems.sort((a,b)=>a.name.localeCompare(b.name)).forEach(item => {
+            
+            // --- PERUBAHAN ---
+            // 1. Definisikan urutan kategori yang diinginkan.
+            const categoryOrder = ['Paket', 'Mie Jogja', 'Satuan', 'Lauk & Sayur', 'Gorengan', 'Minuman'];
+            
+            // 2. Urutkan `allMenuItems` berdasarkan urutan kategori, lalu berdasarkan nama.
+            allMenuItems.sort((a, b) => {
+                const indexA = categoryOrder.indexOf(a.category);
+                const indexB = categoryOrder.indexOf(b.category);
+                
+                // Jika kategori tidak ditemukan di `categoryOrder`, letakkan di akhir.
+                const effectiveIndexA = indexA === -1 ? Infinity : indexA;
+                const effectiveIndexB = indexB === -1 ? Infinity : indexB;
+
+                // Jika kategori berbeda, urutkan berdasarkan posisi di `categoryOrder`.
+                if (effectiveIndexA !== effectiveIndexB) {
+                    return effectiveIndexA - effectiveIndexB;
+                }
+                
+                // Jika kategori sama, urutkan berdasarkan nama (abjad).
+                return a.name.localeCompare(b.name);
+            }).forEach(item => {
                 const row = document.createElement('tr');
                 row.className = 'bg-white border-b hover:bg-slate-50';
                 row.innerHTML = `
@@ -242,7 +261,7 @@
         document.getElementById('upload-menu-btn').addEventListener('click', async () => {
             if(!confirm("Yakin ingin unggah ulang semua menu? Ini akan menimpa status stok yang ada.")) return;
             const initialMenuData = [
-                // ... (Data menu Anda tetap di sini, tidak perlu diubah) ...
+                // Data menu Anda tetap di sini...
                 { id: 'paket-ayam-paha', name: 'Paket Ayam Penyet (Paha)', price: 34000, category: 'Paket', group: 'Paket Ayam Penyet', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/IMG_20250725_123654.png', desc: 'Nasi dengan ayam penyet paha, sambal khas, dan lalapan segar.' },
                 { id: 'paket-ayam-dada', name: 'Paket Ayam Penyet (Dada)', price: 34000, category: 'Paket', group: 'Paket Ayam Penyet', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/IMG_20250725_123654.png', desc: 'Nasi dengan ayam penyet dada, sambal khas, dan lalapan segar.' },
                 { id: 'paket-bebek-paha', name: 'Paket Bebek Penyet (Paha)', price: 40000, category: 'Paket', group: 'Paket Bebek Penyet', image: 'https://raw.githubusercontent.com/Bukhori1/Aps/refs/heads/main/BackgroundEraser_20250425_143339816.jpg', desc: 'Nasi dengan bebek penyet paha, sambal khas, dan lalapan segar.' },
@@ -319,9 +338,20 @@
         document.getElementById('close-receipt-btn').addEventListener('click',()=>receiptModalOverlay.classList.add('hidden'));
         document.getElementById('print-receipt-btn').addEventListener('click',()=>window.print());
         receiptModalOverlay.addEventListener('click',e=>{if(e.target===receiptModalOverlay)receiptModalOverlay.classList.add('hidden')});
-        onSnapshot(query(collection(db,"orders"),orderBy("timestamp","desc")),snapshot=>{let isNew=snapshot.docChanges().some(c=>c.type==="added"&&(!c.doc.data().timestamp||c.doc.data().timestamp.toDate()>new Date(Date.now()-5000)));allOrders=snapshot.docs.map(d=>({id:d.id,...d.data()}));renderOrders();if(isNew)notificationSound.play().catch(e=>console.error("Audio fail:",e))});
+        
+        onSnapshot(query(collection(db,"orders"),orderBy("timestamp","desc")),snapshot=>{
+            let isNew = snapshot.docChanges().some(c => c.type === "added" && (!c.doc.data().timestamp || c.doc.data().timestamp.toDate() > new Date(Date.now() - 5000)));
+            allOrders = snapshot.docs.map(d=>({id:d.id,...d.data()}));
+            renderOrders();
+            if(isNew) {
+                notificationSound.play().catch(e => {
+                    console.error("Gagal memutar audio:", e);
+                });
+            }
+        });
         onSnapshot(collection(db,"menu"),snapshot=>{allMenuItems=snapshot.docs.map(d=>({id:d.id,...d.data()}));renderStockTable();});
         updateClock(); setInterval(updateClock, 60000);
     </script>
 </body>
 </html>
+
