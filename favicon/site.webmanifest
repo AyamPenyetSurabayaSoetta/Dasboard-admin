@@ -1,0 +1,21 @@
+{
+  "name": "Admin Kasir & Stok APS",
+  "short_name": "Admin APS",
+  "description": "Dashboard admin untuk mengelola pesanan dan stok Ayam Penyet Surabaya.",
+  "start_url": "../index.html",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "web-app-manifest-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "web-app-manifest-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
