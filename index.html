@@ -193,9 +193,9 @@
             </div>
         </div>
         
-        <div class="p-3 bg-white border-t mt-auto rounded-b-lg flex flex-col items-center">
-            <button id="close-table-modal-btn" class="w-full bg-gray-300 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-400">Tutup</button>
-        </div>
+<div class="p-3 bg-white border-t mt-auto rounded-b-lg flex flex-col items-center">
+    <p id="total-meja-text" class="text-sm font-semibold mb-2">Total Meja: 0</p> <button id="close-table-modal-btn" class="w-full bg-gray-300 text-gray-800 font-bold py-3 rounded-lg hover:bg-gray-400">Tutup</button>
+</div>
     </div>
 </div>
 <div id="table-order-detail-modal-overlay" class="fixed inset-0 bg-black bg-opacity-70 z-[90] items-center justify-center hidden p-4">
@@ -564,7 +564,7 @@ const tablesData = [
         const tableModalOverlay = document.getElementById('table-modal-overlay');
         const daftarMejaBtn = document.getElementById('daftar-meja-btn');
         const closeTableModalBtn = document.getElementById('close-table-modal-btn');
-        const tableGrid = document.getElementById('table-grid');
+  const tableListGrid = document.getElementById('table-list-grid');
         const totalMejaText = document.getElementById('total-meja-text');
         const tableNameDisplay = document.getElementById('table-name-display');
 
